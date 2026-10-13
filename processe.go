@@ -12,6 +12,7 @@ var (
 	punctBefore = regexp.MustCompile(`\s+([.,!?:;]+)`)
 	punctAfter  = regexp.MustCompile(`([.,!?:;]+)([^\s.,!?:;])`)
 	quoteRegex  = regexp.MustCompile(`"([^"]*)"`)
+	anRegex = regexp.MustCompile(`\b(?:a|an)\b`)
 )
 
 func process(content string) string {
