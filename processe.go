@@ -4,13 +4,14 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var (
 	markerRegex = regexp.MustCompile(`\((hex|bin|up|low|cap)(?:,\s*(\d+))?\)`)
 	punctBefore = regexp.MustCompile(`\s+([.,!?:;]+)`)
 	punctAfter  = regexp.MustCompile(`([.,!?:;]+)([^\s.,!?:;])`)
-	quoteRegex 	= regexp.MustCompile(`"([^"]*)"`)
+	quoteRegex  = regexp.MustCompile(`"([^"]*)"`)
 )
 
 func process(content string) string {
@@ -18,13 +19,13 @@ func process(content string) string {
 
 	for i, line := range lines {
 		line = processMarkers(line)
+		line = fixQuote(line)
 		line = fixPunct(line)
 		lines[i] = line
 	}
 
 	return strings.Join(lines, "\n")
 }
-
 
 func processMarkers(line string) string {
 	line = markerRegex.ReplaceAllStringFunc(line, func(match string) string {
@@ -101,6 +102,52 @@ func transform(cmd, word string) string {
 	}
 
 	return word
+}
+
+func fixQuote(line string) string {
+	runes := []rune(line)
+	var out strings.Builder
+	inQuote := false
+	prev := rune(0)
+
+	for i, r := range runes {
+		if r != '"' {
+			out.WriteRune(r)
+			prev = r
+			continue
+		}
+
+		if !inQuote {
+			if prev != 0 && !unicode.IsSpace(prev) {
+				out.WriteRune(' ')
+			}
+			out.WriteRune(r)
+			inQuote = true
+			prev = r
+			continue
+		}
+
+		out.WriteRune(r)
+		inQuote = false
+		if i+1 < len(runes) {
+			next := runes[i+1]
+			if !unicode.IsSpace(next) && !isQuoteSeparator(next) {
+				out.WriteRune(' ')
+			}
+		}
+		prev = r
+	}
+
+	return out.String()
+}
+
+func isQuoteSeparator(r rune) bool {
+	switch r {
+	case '.', ',', '!', '?', ':', ';':
+		return true
+	default:
+		return false
+	}
 }
 
 func fixPunct(line string) string {
