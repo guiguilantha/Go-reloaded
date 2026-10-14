@@ -222,7 +222,7 @@ func formatArticle(article, nextWord string) string {
 		desired = "an"
 	}
 
-	if article == strings.ToUpper(article) {
+	if article == strings.ToUpper(article) && len(article) > 1 {
 		return strings.ToUpper(desired)
 	}
 	if article != strings.ToLower(article) {

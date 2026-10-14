@@ -1,5 +1,4 @@
 package main
-package main
 
 import "testing"
 
@@ -13,6 +12,7 @@ func TestFixArticles(t *testing.T) {
 		{name: "a before consonant", input: "this is a banana", want: "this is a banana"},
 		{name: "an before consonant", input: "this is an banana", want: "this is a banana"},
 		{name: "silent h", input: "this is a hour", want: "this is an hour"},
+		{name: "uppercase start", input: "A apple", want: "An apple"},
 	}
 
 	for _, tt := range tests {
