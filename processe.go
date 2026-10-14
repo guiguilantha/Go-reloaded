@@ -12,7 +12,7 @@ var (
 	punctBefore = regexp.MustCompile(`\s+([.,!?:;]+)`)
 	punctAfter  = regexp.MustCompile(`([.,!?:;]+)([^\s.,!?:;])`)
 	quoteRegex  = regexp.MustCompile(`"([^"]*)"`)
-	anRegex = regexp.MustCompile(`\b(?:a|an)\b`)
+	anRegex     = regexp.MustCompile(`\b(?:[Aa]|[Aa]n)\b`)
 )
 
 func process(content string) string {
@@ -22,6 +22,7 @@ func process(content string) string {
 		line = processMarkers(line)
 		line = fixQuote(line)
 		line = fixPunct(line)
+		line = fixArticles(line)
 		lines[i] = line
 	}
 
@@ -156,4 +157,86 @@ func fixPunct(line string) string {
 	line = punctAfter.ReplaceAllString(line, "$1 $2")
 
 	return line
+}
+
+func fixArticles(line string) string {
+	matches := anRegex.FindAllStringIndex(line, -1)
+	if len(matches) == 0 {
+		return line
+	}
+
+	var out strings.Builder
+	last := 0
+
+	for _, match := range matches {
+		start, end := match[0], match[1]
+		out.WriteString(line[last:start])
+
+		article := line[start:end]
+		nextWord := nextWordAfter(line, end)
+		if nextWord == "" {
+			out.WriteString(article)
+		} else {
+			out.WriteString(formatArticle(article, nextWord))
+		}
+
+		last = end
+	}
+
+	out.WriteString(line[last:])
+	return out.String()
+}
+
+func nextWordAfter(line string, pos int) string {
+	for pos < len(line) && unicode.IsSpace(rune(line[pos])) {
+		pos++
+	}
+	if pos >= len(line) {
+		return ""
+	}
+
+	start := pos
+	for pos < len(line) && !unicode.IsSpace(rune(line[pos])) {
+		pos++
+	}
+
+	word := strings.Trim(line[start:pos], `"'“”‘’.,!?:;()[]{}<>`)
+	if word == "" {
+		return ""
+	}
+
+	return word
+}
+
+func formatArticle(article, nextWord string) string {
+	nextWord = strings.TrimFunc(nextWord, func(r rune) bool {
+		return !unicode.IsLetter(r)
+	})
+	if nextWord == "" {
+		return article
+	}
+
+	runes := []rune(strings.ToLower(nextWord))
+	desired := "a"
+	if isVowel(runes[0]) || (len(runes) > 1 && runes[0] == 'h' && isVowel(runes[1])) {
+		desired = "an"
+	}
+
+	if article == strings.ToUpper(article) {
+		return strings.ToUpper(desired)
+	}
+	if article != strings.ToLower(article) {
+		return strings.ToUpper(string(desired[0])) + desired[1:]
+	}
+
+	return desired
+}
+
+func isVowel(r rune) bool {
+	switch unicode.ToLower(r) {
+	case 'a', 'e', 'i', 'o', 'u':
+		return true
+	default:
+		return false
+	}
 }
