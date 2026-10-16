@@ -5,7 +5,8 @@ this is VERY COOL (low, 2)
 this should be VERY NICE (up, 2)
 this is a TEST (cap, 3)
 the number 1E (hex) is correct
-the binary number 1010 (bin) is ten
+the binary number 10 (bin) is ten
 there ,is a problem !with punctuation
 hello , world ! how are you ?
 this is a sentence . another sentence
+" zefkhsdfflkerjfhn "

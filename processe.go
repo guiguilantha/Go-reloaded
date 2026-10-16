@@ -53,7 +53,7 @@ func processMarkers(line string) string {
 		}
 
 		for i := len(out) - 1; i >= 0 && n > 0; i-- {
-			if !isWord(out[i]) {
+			if !isAplicable(cmd, out[i]) {
 				continue
 			}
 
@@ -63,6 +63,19 @@ func processMarkers(line string) string {
 	}
 
 	return strings.Join(out, " ")
+}
+
+func isAplicable(cmd, value string) bool {
+	switch cmd {
+	case "hex":
+		_, err := strconv.ParseInt(value, 16, 64)
+		return err == nil
+	case "bin":
+		_, err := strconv.ParseInt(value, 2, 64)
+		return err == nil
+	default:
+		return isWord(value)
+	}
 }
 
 func isWord(s string) bool {
@@ -107,6 +120,10 @@ func transform(cmd, word string) string {
 }
 
 func fixQuote(line string) string {
+	line = quoteRegex.ReplaceAllStringFunc(line, func(quoted string) string {
+		return `"` + strings.TrimSpace(quoted[1:len(quoted)-1]) + `"`
+	})
+
 	runes := []rune(line)
 	var out strings.Builder
 	inQuote := false

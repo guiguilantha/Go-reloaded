@@ -2,6 +2,35 @@ package main
 
 import "testing"
 
+func TestFixQuote(t *testing.T) {
+	input := `" zefkhsdfflkerjfhn "`
+	want := `"zefkhsdfflkerjfhn"`
+
+	if got := fixQuote(input); got != want {
+		t.Fatalf("fixQuote(%q) = %q, want %q", input, got, want)
+	}
+}
+
+func TestProcessMarkersConversions(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{name: "binary number", input: "1010 (bin)", want: "10"},
+		{name: "hexadecimal number", input: "1E (hex)", want: "30"},
+		{name: "hexadecimal digits only", input: "10 (hex)", want: "16"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := processMarkers(tt.input); got != tt.want {
+				t.Fatalf("processMarkers(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFixArticles(t *testing.T) {
 	tests := []struct {
 		name  string
